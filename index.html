@@ -1,1 +1,84 @@
-alfu
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALFU Olshop</title>
+    <style>
+        body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #333; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card .info { padding: 10px; }
+        .card .nama { font-size: 14px; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card .harga { color: #ff4757; font-weight: bold; font-size: 16px; }
+        .loading { text-align: center; color: #666; font-size: 18px; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+<h1>ALFU OLSHOP 🔥</h1>
+<div id="productList" class="grid">
+    <div class="loading">Memuat produk dari Firebase...</div>
+</div>
+
+<!-- Sambungkan Library Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
+    authDomain: "alfa-olshop.firebaseapp.com",
+    projectId: "alfa-olshop",
+    storageBucket: "alfa-olshop.firebasestorage.app",
+    messagingSenderId: "1079963214518",
+    appId: "1:1079963214518:web:c796c3dc0d8f53deadfc17"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const productListEl = document.getElementById('productList');
+
+  // Mengambil data secara real-time dari koleksi 'products'
+  db.collection('products').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+      productListEl.innerHTML = ''; // Kosongkan dulu
+      
+      if (snapshot.empty) {
+          productListEl.innerHTML = '<div class="loading">Belum ada produk. Yuk tambah via Admin!</div>';
+          return;
+      }
+
+      snapshot.forEach((doc) => {
+          const produk = doc.data();
+          const produkId = doc.id;
+          
+          // Membuat kartu produk
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.onclick = () => {
+              // Nanti kita arahkan ke halaman detail
+              alert('Klik produk: ' + produk.namaProduk + '\n(ID: ' + produkId + ')');
+          };
+
+          card.innerHTML = `
+              <img src="${produk.linkFoto}" alt="${produk.namaProduk}" onerror="this.src='https://via.placeholder.com/150'">
+              <div class="info">
+                  <div class="nama">${produk.namaProduk}</div>
+                  <div class="harga">Rp${produk.hargaProduk.toLocaleString('id-ID')}</div>
+              </div>
+          `;
+          
+          productListEl.appendChild(card);
+      });
+  }, (error) => {
+      productListEl.innerHTML = '<div class="loading" style="color:red;">Gagal memuat data. Cek Console (F12).</div>';
+      console.error("Error Firebase:", error);
+  });
+</script>
+
+</body>
+</html>
