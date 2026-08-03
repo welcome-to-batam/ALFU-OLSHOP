@@ -3,17 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALFU Admin - Tambah Produk</title>
+    <title>ALFU Admin - Kelola Produk</title>
     <style>
         body { font-family: sans-serif; background: #f4f4f4; padding: 20px; margin: 0; }
-        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 600px; margin: 0 auto; }
         h2 { text-align: center; color: #333; }
+        
+        /* Styling Form */
+        .form-box { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
         input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
-        textarea { resize: vertical; height: 100px; }
-        button { width: 100%; padding: 12px; background: #ff4757; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #e63946; }
+        textarea { resize: vertical; height: 80px; }
+        .btn-submit { width: 100%; padding: 12px; background: #ff4757; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .btn-submit:hover { background: #e63946; }
+        .btn-batal { width: 100%; padding: 12px; background: #7f8c8d; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; display: none; }
+        
+        /* Styling Daftar Produk */
+        .list-box { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .product-item { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 15px 0; }
+        .product-item:last-child { border-bottom: none; }
+        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px; }
+        .product-info { flex: 1; }
+        .product-info .nama { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .product-info .harga { color: #ff4757; font-weight: bold; }
+        .action-btns { display: flex; gap: 10px; }
+        .btn-edit { background: #3498db; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        
         .status { text-align: center; margin-top: 15px; font-weight: bold; }
         .sukses { color: #27ae60; }
         .gagal { color: #e74c3c; }
@@ -22,30 +39,44 @@
 <body>
 
 <div class="container">
-    <h2>Tambah Produk Baru 🚀</h2>
     
-    <div class="form-group">
-        <label>Nama Produk</label>
-        <input type="text" id="namaProduk" placeholder="Contoh: TWS M90 Pro">
-    </div>
-    
-    <div class="form-group">
-        <label>Harga (Angka saja)</label>
-        <input type="number" id="hargaProduk" placeholder="Contoh: 60000">
+    <!-- FORM TAMBAH / EDIT PRODUK -->
+    <div class="form-box">
+        <h2 id="formTitle">Tambah Produk Baru 🚀</h2>
+        
+        <div class="form-group">
+            <label>Nama Produk</label>
+            <input type="text" id="namaProduk" placeholder="Contoh: TWS M90 Pro">
+        </div>
+        
+        <div class="form-group">
+            <label>Harga (Angka saja)</label>
+            <input type="number" id="hargaProduk" placeholder="Contoh: 60000">
+        </div>
+
+        <div class="form-group">
+            <label>Link Foto</label>
+            <input type="text" id="linkFoto" placeholder="https://contoh.com/gambar.jpg">
+        </div>
+
+        <div class="form-group">
+            <label>Deskripsi</label>
+            <textarea id="deskripsiProduk" placeholder="Tulis deskripsi produk di sini..."></textarea>
+        </div>
+
+        <button id="btnSubmit" class="btn-submit" onclick="simpanProduk()">UPLOAD KE FIREBASE</button>
+        <button id="btnBatal" class="btn-batal" onclick="batalEdit()">Batal Edit</button>
+        <div id="statusMsg" class="status"></div>
     </div>
 
-    <div class="form-group">
-        <label>Link Foto</label>
-        <input type="text" id="linkFoto" placeholder="https://contoh.com/gambar.jpg">
+    <!-- DAFTAR PRODUK DARI FIREBASE -->
+    <div class="list-box">
+        <h2>Daftar Produk 📦</h2>
+        <div id="productListAdmin">
+            <p style="text-align:center; color:#888;">Memuat data...</p>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label>Deskripsi</label>
-        <textarea id="deskripsiProduk" placeholder="Tulis deskripsi produk di sini..."></textarea>
-    </div>
-
-    <button onclick="tambahProduk()">UPLOAD KE FIREBASE</button>
-    <div id="statusMsg" class="status"></div>
 </div>
 
 <!-- Sambungkan Library Firebase -->
@@ -53,7 +84,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-  // Paste konfigurasi Firebase lu di sini
   const firebaseConfig = {
     apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
     authDomain: "alfa-olshop.firebaseapp.com",
@@ -63,17 +93,22 @@
     appId: "1:1079963214518:web:c796c3dc0d8f53deadfc17"
   };
 
-  // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // Fungsi untuk menambah produk
-  function tambahProduk() {
+  // Variabel global untuk menentukan mode Edit atau Tambah
+  let editId = null; 
+
+  // ==========================================
+  // 1. FUNGSI SIMPAN (TAMBAH / UPDATE)
+  // ==========================================
+  function simpanProduk() {
       const nama = document.getElementById('namaProduk').value;
       const harga = parseInt(document.getElementById('hargaProduk').value);
       const foto = document.getElementById('linkFoto').value;
       const deskripsi = document.getElementById('deskripsiProduk').value;
       const statusEl = document.getElementById('statusMsg');
+      const btnSubmit = document.getElementById('btnSubmit');
 
       if (!nama || !harga || !foto) {
           statusEl.innerHTML = "Nama, Harga, dan Foto wajib diisi! 😡";
@@ -81,28 +116,141 @@
           return;
       }
 
-      // Mengirim data ke koleksi 'products' di Firestore
-      db.collection('products').add({
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = "Menyimpan... ⏳";
+      statusEl.innerHTML = "";
+
+      const dataProduk = {
           namaProduk: nama,
           hargaProduk: harga,
           linkFoto: foto,
-          deskripsi: deskripsi,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp() // Biar tau kapan diupload
-      })
-      .then((docRef) => {
-          statusEl.innerHTML = "Berhasil ditambahkan! ID: " + docRef.id + " 🎉";
-          statusEl.className = "status sukses";
-          // Kosongkan form setelah berhasil
-          document.getElementById('namaProduk').value = '';
-          document.getElementById('hargaProduk').value = '';
-          document.getElementById('linkFoto').value = '';
-          document.getElementById('deskripsiProduk').value = '';
-      })
-      .catch((error) => {
-          statusEl.innerHTML = "Gagal upload: " + error.message + " 😭";
-          statusEl.className = "status gagal";
-      });
+          deskripsi: deskripsi
+      };
+
+      // Jika editId ada isinya, berarti ini mode EDIT (Update)
+      if (editId) {
+          db.collection('products').doc(editId).update(dataProduk)
+          .then(() => {
+              statusEl.innerHTML = "Produk berhasil diupdate! 🎉";
+              statusEl.className = "status sukses";
+              resetForm();
+          })
+          .catch((error) => {
+              statusEl.innerHTML = "Gagal update: " + error.message + " 😭";
+              statusEl.className = "status gagal";
+              btnSubmit.disabled = false;
+              btnSubmit.innerText = "SIMPAN PERUBAHAN";
+          });
+      } 
+      // Jika editId kosong, berarti ini mode TAMBAH (Create)
+      else {
+          dataProduk.timestamp = firebase.firestore.FieldValue.serverTimestamp(); // Hanya saat tambah baru
+          
+          db.collection('products').add(dataProduk)
+          .then(() => {
+              statusEl.innerHTML = "Berhasil ditambahkan! 🎉";
+              statusEl.className = "status sukses";
+              resetForm();
+          })
+          .catch((error) => {
+              statusEl.innerHTML = "Gagal upload: " + error.message + " 😭";
+              statusEl.className = "status gagal";
+              btnSubmit.disabled = false;
+              btnSubmit.innerText = "UPLOAD KE FIREBASE";
+          });
+      }
   }
+
+  // ==========================================
+  // 2. FUNGSI EDIT (MENGISI FORM)
+  // ==========================================
+  function editProduk(id, nama, harga, foto, deskripsi) {
+      editId = id;
+      document.getElementById('namaProduk').value = nama;
+      document.getElementById('hargaProduk').value = harga;
+      document.getElementById('linkFoto').value = foto;
+      document.getElementById('deskripsiProduk').value = deskripsi;
+      
+      document.getElementById('formTitle').innerText = "Edit Produk ✏️";
+      document.getElementById('btnSubmit').innerText = "SIMPAN PERUBAHAN";
+      document.getElementById('btnBatal').style.display = "block";
+      
+      // Scroll ke atas biar form kelihatan
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ==========================================
+  // 3. FUNGSI BATAL EDIT
+  // ==========================================
+  function batalEdit() {
+      resetForm();
+  }
+
+  function resetForm() {
+      editId = null;
+      document.getElementById('namaProduk').value = '';
+      document.getElementById('hargaProduk').value = '';
+      document.getElementById('linkFoto').value = '';
+      document.getElementById('deskripsiProduk').value = '';
+      
+      document.getElementById('formTitle').innerText = "Tambah Produk Baru 🚀";
+      document.getElementById('btnSubmit').innerText = "UPLOAD KE FIREBASE";
+      document.getElementById('btnSubmit').disabled = false;
+      document.getElementById('btnBatal').style.display = "none";
+      document.getElementById('statusMsg').innerHTML = '';
+  }
+
+  // ==========================================
+  // 4. FUNGSI HAPUS PRODUK
+  // ==========================================
+  function hapusProduk(id, nama) {
+      if (confirm("Yakin mau hapus produk: " + nama + "?")) {
+          db.collection('products').doc(id).delete()
+          .then(() => {
+              alert("Produk berhasil dihapus!");
+          })
+          .catch((error) => {
+              alert("Gagal hapus: " + error.message);
+          });
+      }
+  }
+
+  // ==========================================
+  // 5. TAMPILKAN DAFTAR PRODUK (REAL-TIME)
+  // ==========================================
+  const productListAdmin = document.getElementById('productListAdmin');
+
+  db.collection('products').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+      productListAdmin.innerHTML = ''; 
+
+      if (snapshot.empty) {
+          productListAdmin.innerHTML = '<p style="text-align:center; color:#888;">Belum ada produk.</p>';
+          return;
+      }
+
+      snapshot.forEach((doc) => {
+          const produk = doc.data();
+          const produkId = doc.id;
+          
+          const item = document.createElement('div');
+          item.className = 'product-item';
+
+          item.innerHTML = `
+              <img src="${produk.linkFoto}" class="product-img" onerror="this.src='https://via.placeholder.com/60'">
+              <div class="product-info">
+                  <div class="nama">${produk.namaProduk}</div>
+                  <div class="harga">Rp${produk.hargaProduk.toLocaleString('id-ID')}</div>
+              </div>
+              <div class="action-btns">
+                  <button class="btn-edit" onclick="editProduk('${produkId}', '${produk.namaProduk}', ${produk.hargaProduk}, '${produk.linkFoto}', '${produk.deskripsi.replace(/'/g, "\\'")}')">Edit</button>
+                  <button class="btn-delete" onclick="hapusProduk('${produkId}', '${produk.namaProduk}')">Hapus</button>
+              </div>
+          `;
+          
+          productListAdmin.appendChild(item);
+      });
+  });
+
 </script>
 
 </body>
