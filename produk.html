@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detail Produk - ALFU</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f5f5f5;color:#222;padding-bottom:80px}
+  .header{position:sticky;top:0;background:#fff;padding:12px 16px;display:flex;align-items:center;border-bottom:1px solid #eee;z-index:10}
+  .header a{font-size:24px;text-decoration:none;color:#222;margin-right:12px}
+  .header h1{font-size:16px;margin:0;font-weight:600}
+  .card{background:#fff;padding:16px;margin-bottom:8px}
+  .price{color:#ee4d2d;font-size:24px;font-weight:700;margin:8px 0}
+  .rating{display:flex;align-items:center;gap:8px;color:#666;font-size:14px;margin-bottom:12px}
+  .title{font-size:18px;font-weight:600;line-height:1.4;margin:0 0 8px 0}
+  .desc-title{font-size:16px;font-weight:600;margin:0 0 8px 0}
+  .desc{font-size:14px;line-height:1.6;color:#555; white-space: pre-line;}
+  .wa-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;border-top:1px solid #eee;box-shadow:0 -2px 8px rgba(0,0,0,0.1)}
+  .btn-wa{width:100%;background:#25D366;color:#fff;border:none;padding:14px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer}
+  .btn-wa:hover{background:#1ebe5b}
+  .slider{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#fff}
+  .slides{display:flex;transition:transform .3s ease}
+  .slides img{width:100%;flex-shrink:0;object-fit:cover}
+  .dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#fff5;transition:.3s}
+  .dot.active{background:#fff}
+  .loading-text{text-align:center;padding:50px;color:#888}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="index.html">←</a>
+  <h1>Detail Produk</h1>
+</header>
+
+<div id="product-container">
+  <p class="loading-text" id="loadingMsg">Memuat produk dari Firebase...</p>
+</div>
+
+<div class="wa-bar" id="waBar" style="display:none;">
+  <button id="waBtn" class="btn-wa">Beli via WhatsApp</button>
+</div>
+
+<!-- Sambungkan Library Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
+    authDomain: "alfa-olshop.firebaseapp.com",
+    projectId: "alfa-olshop",
+    storageBucket: "alfa-olshop.firebasestorage.app",
+    messagingSenderId: "1079963214518",
+    appId: "1:1079963214518:web:c796c3dc0d8f53deadfc17"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const nomorWA = "6283879387000"; // Ganti nomor WA lu bro
+
+  // Ambil ID dari URL (contoh: ?id=abc123xyz)
+  const urlParams = new URLSearchParams(window.location.search);
+  const produkId = urlParams.get('id');
+
+  const container = document.getElementById('product-container');
+  const waBar = document.getElementById('waBar');
+  const waBtn = document.getElementById('waBtn');
+  const loadingMsg = document.getElementById('loadingMsg');
+
+  if (produkId) {
+      // Ambil data dari Firestore berdasarkan ID
+      db.collection('products').doc(produkId).get().then((doc) => {
+          if (doc.exists) {
+              const produk = doc.data();
+              renderProduk(produk);
+          } else {
+              container.innerHTML = '<h1 style="text-align:center;padding:50px">Produk tidak ditemukan 😭</h1>';
+          }
+      }).catch((error) => {
+          container.innerHTML = '<h1 style="text-align:center;padding:50px;color:red;">Error: ' + error.message + '</h1>';
+      });
+  } else {
+      container.innerHTML = '<h1 style="text-align:center;padding:50px">ID Produk tidak valid</h1>';
+  }
+
+  function renderProduk(produk) {
+      loadingMsg.style.display = 'none';
+      waBar.style.display = 'block';
+
+      // Untuk sementara, kita asumsikan gambar hanya 1 (linkFoto). 
+      // Kalau mau banyak, kita buat array di dalam array nanti.
+      const gambar = produk.linkFoto || 'https://via.placeholder.com/400';
+      const arrGambar = [gambar]; // Masukkan ke array biar bisa pakai fitur slider swipe
+
+      let html = `
+        <div class="slider">
+          <div class="slides" id="slides"></div>
+          <div class="dots" id="dots"></div>
+        </div>
+        <div class="card">
+          <h2 class="title">${produk.namaProduk}</h2>
+          <div class="price">Rp${produk.hargaProduk.toLocaleString('id-ID')}</div>
+        </div>
+        <div class="card">
+          <h3 class="desc-title">Deskripsi Produk</h3>
+          <p class="desc">${produk.deskripsi || 'Belum ada deskripsi.'}</p>
+        </div>
+      `;
+
+      container.innerHTML = html;
+
+      // Render Slider
+      const slides = document.getElementById('slides');
+      const dots = document.getElementById('dots');
+      
+      arrGambar.forEach((img, i) => {
+          slides.innerHTML += `<img src="${img}" style="width:100%; height:400px; object-fit:cover; flex-shrink:0;">`;
+          dots.innerHTML += `<span class="dot ${i===0?'active':''}"></span>`;
+      });
+
+      // Logika Swipe Slider
+      let index = 0;
+      let startX = 0;
+      slides.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+      slides.addEventListener('touchend', e => {
+          let diff = e.changedTouches[0].clientX - startX;
+          if(diff < -50 && index < arrGambar.length-1) index++;
+          if(diff > 50 && index > 0) index--;
+          slides.style.transform = `translateX(-${index*100}%)`;
+          document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i===index));
+      });
+
+      // Logika Tombol WA
+      waBtn.onclick = () => {
+          const pesan = `Halo ALFU Olshop 🙏%0A%0A` +
+                        `Saya mau pesan:%0A` +
+                        `*${produk.namaProduk}*%0A` +
+                        `Harga: Rp ${produk.hargaProduk.toLocaleString('id-ID')}%0A` +
+                        `Jumlah: 1 pcs%0A%0A` +
+                        `Terima kasih`;
+          window.open(`https://wa.me/${nomorWA}?text=${pesan}`, '_blank');
+      };
+  }
+</script>
+
+</body>
+</html>
