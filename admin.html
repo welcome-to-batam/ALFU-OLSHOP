@@ -1,1 +1,109 @@
-alfu
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALFU Admin - Tambah Produk</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; margin: 0; }
+        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        textarea { resize: vertical; height: 100px; }
+        button { width: 100%; padding: 12px; background: #ff4757; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #e63946; }
+        .status { text-align: center; margin-top: 15px; font-weight: bold; }
+        .sukses { color: #27ae60; }
+        .gagal { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tambah Produk Baru 🚀</h2>
+    
+    <div class="form-group">
+        <label>Nama Produk</label>
+        <input type="text" id="namaProduk" placeholder="Contoh: TWS M90 Pro">
+    </div>
+    
+    <div class="form-group">
+        <label>Harga (Angka saja)</label>
+        <input type="number" id="hargaProduk" placeholder="Contoh: 60000">
+    </div>
+
+    <div class="form-group">
+        <label>Link Foto</label>
+        <input type="text" id="linkFoto" placeholder="https://contoh.com/gambar.jpg">
+    </div>
+
+    <div class="form-group">
+        <label>Deskripsi</label>
+        <textarea id="deskripsiProduk" placeholder="Tulis deskripsi produk di sini..."></textarea>
+    </div>
+
+    <button onclick="tambahProduk()">UPLOAD KE FIREBASE</button>
+    <div id="statusMsg" class="status"></div>
+</div>
+
+<!-- Sambungkan Library Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  // Paste konfigurasi Firebase lu di sini
+  const firebaseConfig = {
+    apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
+    authDomain: "alfa-olshop.firebaseapp.com",
+    projectId: "alfa-olshop",
+    storageBucket: "alfa-olshop.firebasestorage.app",
+    messagingSenderId: "1079963214518",
+    appId: "1:1079963214518:web:c796c3dc0d8f53deadfc17"
+  };
+
+  // Inisialisasi Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Fungsi untuk menambah produk
+  function tambahProduk() {
+      const nama = document.getElementById('namaProduk').value;
+      const harga = parseInt(document.getElementById('hargaProduk').value);
+      const foto = document.getElementById('linkFoto').value;
+      const deskripsi = document.getElementById('deskripsiProduk').value;
+      const statusEl = document.getElementById('statusMsg');
+
+      if (!nama || !harga || !foto) {
+          statusEl.innerHTML = "Nama, Harga, dan Foto wajib diisi! 😡";
+          statusEl.className = "status gagal";
+          return;
+      }
+
+      // Mengirim data ke koleksi 'products' di Firestore
+      db.collection('products').add({
+          namaProduk: nama,
+          hargaProduk: harga,
+          linkFoto: foto,
+          deskripsi: deskripsi,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp() // Biar tau kapan diupload
+      })
+      .then((docRef) => {
+          statusEl.innerHTML = "Berhasil ditambahkan! ID: " + docRef.id + " 🎉";
+          statusEl.className = "status sukses";
+          // Kosongkan form setelah berhasil
+          document.getElementById('namaProduk').value = '';
+          document.getElementById('hargaProduk').value = '';
+          document.getElementById('linkFoto').value = '';
+          document.getElementById('deskripsiProduk').value = '';
+      })
+      .catch((error) => {
+          statusEl.innerHTML = "Gagal upload: " + error.message + " 😭";
+          statusEl.className = "status gagal";
+      });
+  }
+</script>
+
+</body>
+</html>
