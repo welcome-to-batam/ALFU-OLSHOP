@@ -16,6 +16,7 @@
         .status { padding: 10px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; text-align: center; }
         .status.sukses { background: #d4edda; color: #155724; }
         .status.gagal { background: #f8d7da; color: #721c24; }
+        
         .product-item { display: flex; align-items: center; background: #fff; padding: 10px; border-bottom: 1px solid #eee; margin-top: 10px; }
         .product-img { width: 60px; height: 60px; object-fit: cover; margin-right: 15px; border-radius: 4px; }
         .product-info { flex: 1; }
@@ -25,6 +26,7 @@
         .action-btns button { width: auto; padding: 6px 12px; font-size: 12px; margin-top: 0; }
         .btn-edit { background: #ffc107; color: #212529; }
         .btn-delete { background: #dc3545; color: white; }
+        
         #loginArea { display: block; }
         #adminArea { display: none; }
         .btn-logout { background: #6c757d; max-width: 100px; margin: 0 auto 20px auto; padding: 8px; font-size: 14px; }
@@ -94,11 +96,10 @@
     </div>
 </div>
 
-<!-- SDK Firebase v8 -->
+<!-- HUBUNGKAN LIBRARY FIREBASE -->
 <script src="https://gstatic.com"></script>
 <script src="https://gstatic.com"></script>
 <script src="https://gstatic.com"></script>
-<script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
@@ -115,6 +116,7 @@
 
   let editId = null;
 
+  // Cek Status Login
   auth.onAuthStateChanged((user) => {
       if (user) {
           document.getElementById('loginArea').style.display = 'none';
@@ -127,6 +129,7 @@
       }
   });
 
+  // Fungsi Login
   function prosesLogin() {
       const email = document.getElementById('loginEmail').value;
       const pass = document.getElementById('loginPassword').value;
@@ -140,10 +143,12 @@
       });
   }
 
+  // Fungsi Logout
   function prosesLogout() {
       if(confirm("Keluar dari panel admin?")) auth.signOut();
   }
 
+  // Fungsi Simpan / Tambah Produk
   function simpanProduk() {
       const nama = document.getElementById('namaProduk').value;
       const harga = parseInt(document.getElementById('hargaProduk').value);
@@ -200,6 +205,7 @@
       }
   }
 
+  // Fungsi Siapkan Form untuk Edit
   function editProduk(id, nama, harga, fotoString, deskripsi, rating, terjual, isCod) {
       editId = id;
       document.getElementById('namaProduk').value = nama;
@@ -218,6 +224,7 @@
 
   function batalEdit() { resetForm(); }
 
+  // Fungsi Reset Form
   function resetForm() {
       editId = null;
       document.getElementById('namaProduk').value = '';
@@ -233,6 +240,7 @@
       document.getElementById('btnBatal').style.display = "none";
   }
 
+  // Fungsi Hapus Produk
   function hapusProduk(id, nama) {
       if (confirm("Hapus produk: " + nama + "?")) {
           db.collection('products').doc(id).delete()
@@ -240,6 +248,7 @@
       }
   }
 
+  // Fungsi Muat Daftar Produk Secara Real-time
   function muatDaftarProduk() {
       const listEl = document.getElementById('productListAdmin');
       db.collection('products').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
@@ -260,19 +269,16 @@
               
               const item = document.createElement('div');
               item.className = 'product-item';
-              item.innerHTML = `
-                  <img src="${fUtama}" class="product-img" onerror="this.src='https://placeholder.com'">
-                  <div class="product-info">
-                      <div class="nama">${p.namaProduk}</div>
-                      <div class="harga">Rp${p.hargaProduk.toLocaleString('id-ID')}</div>
-                      <div style="font-size:11px; color:#666;">🌟${rate} | Jual: ${sold} | COD: ${cod ? '✅' : '❌'}</div>
-                  </div>
-                  <div class="action-btns">
-                      <button class="btn-edit" onclick="editProduk('${pId}', '${p.namaProduk.replace(/'/g, "\\'")}', ${p.hargaProduk}, '${fStr.replace(/'/g, "\\'")}', '${p.deskripsi.replace(/'/g, "\\'")}', ${rate}, ${sold}, ${cod})">Edit</button>
-                      <button class="btn-delete" onclick="hapusProduk('${pId}', '${p.namaProduk}')">Hapus</button>
-                  </div>
-              `;
+              item.innerHTML = '<img src="' + fUtama + '" class="product-img" onerror="this.src=\'https://placeholder.com\'\"><div class="product-info"><div class="nama">' + p.namaProduk + '</div><div class="harga">Rp' + p.hargaProduk.toLocaleString('id-ID') + '</div><div style="font-size:11px; color:#666;">🌟' + rate + ' | Jual: ' + sold + ' | COD: ' + (cod ? '✅' : '❌') + '</div></div><div class="action-btns"><button class="btn-edit" id="btnEdit-' + pId + '">Edit</button><button class="btn-delete" id="btnDel-' + pId + '">Hapus</button></div>';
               listEl.appendChild(item);
+
+              // Berikan fungsi klik tombol secara aman tanpa risiko crash teks kutip
+              document.getElementById('btnEdit-' + pId).onclick = function() {
+                  editProduk(pId, p.namaProduk, p.hargaProduk, fStr, p.deskripsi, rate, sold, cod);
+              };
+              document.getElementById('btnDel-' + pId).onclick = function() {
+                  hapusProduk(pId, p.namaProduk);
+              };
           });
       });
   }
