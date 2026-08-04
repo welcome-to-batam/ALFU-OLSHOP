@@ -64,6 +64,22 @@
             <textarea id="deskripsiProduk" placeholder="Tulis deskripsi produk di sini..."></textarea>
         </div>
 
+        <!-- Masukkan ini di dalam form Anda, contoh ditaruh di bawah kolom deskripsi -->
+<div class="form-group">
+    <label>Rating Tampilan (Contoh: 4.9)</label>
+    <input type="number" id="ratingProduk" step="0.1" min="1" max="5" value="4.9">
+</div>
+
+<div class="form-group">
+    <label>Jumlah Terjual (Contoh: 120)</label>
+    <input type="number" id="terjualProduk" min="0" value="0">
+</div>
+
+<div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+    <input type="checkbox" id="codProduk">
+    <label for="codProduk">Aktifkan Label COD (Bayar di Tempat)</label>
+</div>
+
         <button id="btnSubmit" class="btn-submit" onclick="simpanProduk()">UPLOAD KE FIREBASE</button>
         <button id="btnBatal" class="btn-batal" onclick="batalEdit()">Batal Edit</button>
         <div id="statusMsg" class="status"></div>
@@ -96,7 +112,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // Variabel global untuk menentukan mode Edit atau Tambah
   let editId = null; 
 
   // ==========================================
@@ -105,12 +120,18 @@
   function simpanProduk() {
       const nama = document.getElementById('namaProduk').value;
       const harga = parseInt(document.getElementById('hargaProduk').value);
-      const foto = document.getElementById('linkFoto').value;
+      const fotoInput = document.getElementById('linkFoto').value; // Mengambil string input foto
       const deskripsi = document.getElementById('deskripsiProduk').value;
+      
+      // TAMBAHAN FITUR BARU (Rating, Terjual, COD)
+      const rating = parseFloat(document.getElementById('ratingProduk').value) || 4.9;
+      const terjual = parseInt(document.getElementById('terjualProduk').value) || 0;
+      const isCod = document.getElementById('codProduk').checked;
+
       const statusEl = document.getElementById('statusMsg');
       const btnSubmit = document.getElementById('btnSubmit');
 
-      if (!nama || !harga || !foto) {
+      if (!nama || !harga || !fotoInput) {
           statusEl.innerHTML = "Nama, Harga, dan Foto wajib diisi! 😡";
           statusEl.className = "status gagal";
           return;
@@ -120,14 +141,19 @@
       btnSubmit.innerText = "Menyimpan... ⏳";
       statusEl.innerHTML = "";
 
+      // Mengubah string koma menjadi Array Foto, menghapus spasi kosong di sekitar link
+      const arrayFoto = fotoInput.split(',').map(item => item.trim()).filter(item => item !== "");
+
       const dataProduk = {
           namaProduk: nama,
           hargaProduk: harga,
-          linkFoto: foto,
-          deskripsi: deskripsi
+          linkFoto: arrayFoto, // Sekarang bertipe Array [foto1, foto2, dst]
+          deskripsi: deskripsi,
+          ratingProduk: rating,
+          terjualProduk: terjual,
+          isCod: isCod
       };
 
-      // Jika editId ada isinya, berarti ini mode EDIT (Update)
       if (editId) {
           db.collection('products').doc(editId).update(dataProduk)
           .then(() => {
@@ -142,9 +168,8 @@
               btnSubmit.innerText = "SIMPAN PERUBAHAN";
           });
       } 
-      // Jika editId kosong, berarti ini mode TAMBAH (Create)
       else {
-          dataProduk.timestamp = firebase.firestore.FieldValue.serverTimestamp(); // Hanya saat tambah baru
+          dataProduk.timestamp = firebase.firestore.FieldValue.serverTimestamp();
           
           db.collection('products').add(dataProduk)
           .then(() => {
@@ -164,23 +189,26 @@
   // ==========================================
   // 2. FUNGSI EDIT (MENGISI FORM)
   // ==========================================
-  function editProduk(id, nama, harga, foto, deskripsi) {
+  function editProduk(id, nama, harga, fotoString, deskripsi, rating, terjual, isCod) {
       editId = id;
       document.getElementById('namaProduk').value = nama;
       document.getElementById('hargaProduk').value = harga;
-      document.getElementById('linkFoto').value = foto;
+      document.getElementById('linkFoto').value = fotoString; // Menampilkan kembali format teks koma
       document.getElementById('deskripsiProduk').value = deskripsi;
+      
+      document.getElementById('ratingProduk').value = rating;
+      document.getElementById('terjualProduk').value = terjual;
+      document.getElementById('codProduk').checked = isCod === 'true' || isCod === true;
       
       document.getElementById('formTitle').innerText = "Edit Produk ✏️";
       document.getElementById('btnSubmit').innerText = "SIMPAN PERUBAHAN";
       document.getElementById('btnBatal').style.display = "block";
       
-      // Scroll ke atas biar form kelihatan
       window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ==========================================
-  // 3. FUNGSI BATAL EDIT
+  // 3. FUNGSI BATAL EDIT & RESET
   // ==========================================
   function batalEdit() {
       resetForm();
@@ -192,6 +220,9 @@
       document.getElementById('hargaProduk').value = '';
       document.getElementById('linkFoto').value = '';
       document.getElementById('deskripsiProduk').value = '';
+      document.getElementById('ratingProduk').value = '4.9';
+      document.getElementById('terjualProduk').value = '0';
+      document.getElementById('codProduk').checked = false;
       
       document.getElementById('formTitle').innerText = "Tambah Produk Baru 🚀";
       document.getElementById('btnSubmit').innerText = "UPLOAD KE FIREBASE";
@@ -232,17 +263,28 @@
           const produk = doc.data();
           const produkId = doc.id;
           
+          // Mengatasi perbedaan jika data lama masih string tunggal, ubah ke array
+          const fotoArray = Array.isArray(produk.linkFoto) ? produk.linkFoto : [produk.linkFoto];
+          const fotoUtama = fotoArray[0] || 'https://via.placeholder.com/60';
+          const fotoStringUntukEdit = fotoArray.join(', '); // Gabung jadi teks pisah koma untuk form edit
+
+          // Mengambil nilai baru atau set nilai default jika data produk lama belum punya
+          const rating = produk.ratingProduk !== undefined ? produk.ratingProduk : 4.9;
+          const terjual = produk.terjualProduk !== undefined ? produk.terjualProduk : 0;
+          const isCod = produk.isCod !== undefined ? produk.isCod : false;
+          
           const item = document.createElement('div');
           item.className = 'product-item';
 
           item.innerHTML = `
-              <img src="${produk.linkFoto}" class="product-img" onerror="this.src='https://via.placeholder.com/60'">
+              <img src="${fotoUtama}" class="product-img" onerror="this.src='https://via.placeholder.com/60'">
               <div class="product-info">
                   <div class="nama">${produk.namaProduk}</div>
                   <div class="harga">Rp${produk.hargaProduk.toLocaleString('id-ID')}</div>
+                  <div style="font-size:11px; color:#666;">🌟${rating} | Terjual: ${terjual} | COD: ${isCod ? '✅' : '❌'}</div>
               </div>
               <div class="action-btns">
-                  <button class="btn-edit" onclick="editProduk('${produkId}', '${produk.namaProduk}', ${produk.hargaProduk}, '${produk.linkFoto}', '${produk.deskripsi.replace(/'/g, "\\'")}')">Edit</button>
+                  <button class="btn-edit" onclick="editProduk('${produkId}', '${produk.namaProduk.replace(/'/g, "\\'")}', ${produk.hargaProduk}, '${fotoStringUntukEdit.replace(/'/g, "\\'")}', '${produk.deskripsi.replace(/'/g, "\\'")}', ${rating}, ${terjual}, ${isCod})">Edit</button>
                   <button class="btn-delete" onclick="hapusProduk('${produkId}', '${produk.namaProduk}')">Hapus</button>
               </div>
           `;
@@ -250,7 +292,6 @@
           productListAdmin.appendChild(item);
       });
   });
-
 </script>
 
 </body>
