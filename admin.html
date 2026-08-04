@@ -99,6 +99,7 @@
 <script src="https://gstatic.com"></script>
 <script src="https://gstatic.com"></script>
 <script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
     authDomain: "://firebaseapp.com",
@@ -215,7 +216,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function btlEdit() { resetForm(); }
+  function batalEdit() { resetForm(); }
 
   function resetForm() {
       editId = null;
@@ -251,7 +252,7 @@
               const p = doc.data();
               const pId = doc.id;
               const fArr = Array.isArray(p.linkFoto) ? p.linkFoto : [p.linkFoto];
-              const fUtama = fArr || 'https://placeholder.com';
+              const fUtama = fArr[0] || 'https://placeholder.com';
               const fStr = fArr.join(', ');
               const rate = p.ratingProduk !== undefined ? p.ratingProduk : 4.9;
               const sold = p.terjualProduk !== undefined ? p.terjualProduk : 0;
