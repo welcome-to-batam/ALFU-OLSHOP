@@ -130,18 +130,27 @@
   });
 
   // Fungsi Login
-  function prosesLogin() {
+    function prosesLogin() {
       const email = document.getElementById('loginEmail').value;
       const pass = document.getElementById('loginPassword').value;
       const statusLog = document.getElementById('loginStatus');
+      
       if(!email || !pass) {
           statusLog.innerHTML = "<div class='status gagal'>Isi email dan password!</div>";
           return;
       }
-      auth.signInWithEmailAndPassword(email, pass).catch((err) => {
+      
+      statusLog.innerHTML = "<div class='status' style='background:#fff3cd; color:#856404;'>Memverifikasi... ⏳</div>";
+
+      auth.signInWithEmailAndPassword(email, pass)
+      .then(() => {
+          statusLog.innerHTML = ""; // Bersihkan jika sukses
+      })
+      .catch((err) => {
+          // Menampilkan alasan kenapa gagal login (misal: password salah / user tidak ditemukan)
           statusLog.innerHTML = "<div class='status gagal'>Gagal: " + err.message + "</div>";
       });
-  }
+    }
 
   // Fungsi Logout
   function prosesLogout() {
