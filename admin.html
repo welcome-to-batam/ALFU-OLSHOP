@@ -130,7 +130,7 @@
   });
 
   // Fungsi Login
-    function prosesLogin() {
+      function prosesLogin() {
       const email = document.getElementById('loginEmail').value;
       const pass = document.getElementById('loginPassword').value;
       const statusLog = document.getElementById('loginStatus');
@@ -142,15 +142,27 @@
       
       statusLog.innerHTML = "<div class='status' style='background:#fff3cd; color:#856404;'>Memverifikasi... ⏳</div>";
 
+      // Membuat pembatas waktu (timeout) 10 detik
+      let isTimeout = false;
+      const batasanWaktu = setTimeout(() => {
+          isTimeout = true;
+          statusLog.innerHTML = "<div class='status gagal'>Koneksi Internet Lemot / Gagal Menghubungi Firebase. Cek sinyal Anda! 🌐</div>";
+      }, 10000); // 10000 milidetik = 10 detik
+
       auth.signInWithEmailAndPassword(email, pass)
       .then(() => {
-          statusLog.innerHTML = ""; // Bersihkan jika sukses
+          if (!isTimeout) {
+              clearTimeout(batasanWaktu); // Batalkan timeout jika berhasil tepat waktu
+              statusLog.innerHTML = ""; 
+          }
       })
       .catch((err) => {
-          // Menampilkan alasan kenapa gagal login (misal: password salah / user tidak ditemukan)
-          statusLog.innerHTML = "<div class='status gagal'>Gagal: " + err.message + "</div>";
+          if (!isTimeout) {
+              clearTimeout(batasanWaktu); // Batalkan timeout jika Firebase merespons eror
+              statusLog.innerHTML = "<div class='status gagal'>Gagal: " + err.message + "</div>";
+          }
       });
-    }
+      }
 
   // Fungsi Logout
   function prosesLogout() {
