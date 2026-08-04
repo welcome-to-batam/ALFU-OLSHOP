@@ -101,36 +101,43 @@
 <script src="https://gstatic.com"></script>
 <script src="https://gstatic.com"></script>
 <script>
+  // 1. Konfigurasi Resmi Sesuai Gambar Firebase Console Anda (ALFA)
   const firebaseConfig = {
     apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
-    authDomain: "alfu-olshop.firebaseapp.com",
-    projectId: "alfu-olshop",
-    storageBucket: "alfu-olshop.firebasestorage.app",
+    authDomain: "alfa-olshop.firebaseapp.com",
+    projectId: "alfa-olshop",
+    storageBucket: "alfa-olshop.firebasestorage.app",
     messagingSenderId: "1079963214518",
     appId: "1:1079963214518:web:c796c3dc0d8f53deadfc17"
   };
 
-  firebase.initializeApp(firebaseConfig);
+  // 2. Inisialisasi Firebase secara utuh
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  
   const db = firebase.firestore();
-  const auth = firebase.auth();
+  const auth = firebase.auth(); // Mengaktifkan fungsi Authentication
 
   let editId = null;
 
-  // Cek Status Login
+  // 3. Siklus Otomatis Cek Status Login Admin
   auth.onAuthStateChanged((user) => {
       if (user) {
+          // Jika sukses login, form login hilang & daftar produk muncul
           document.getElementById('loginArea').style.display = 'none';
           document.getElementById('adminArea').style.display = 'block';
           muatDaftarProduk();
       } else {
+          // Jika belum login, paksa hanya menampilkan form login
           document.getElementById('loginArea').style.display = 'block';
           document.getElementById('adminArea').style.display = 'none';
           document.getElementById('productListAdmin').innerHTML = '';
       }
   });
 
-  // Fungsi Login
-      function prosesLogin() {
+  // 4. Fungsi Login Utama (Menggunakan Respons Asli Firebase Tanpa Timeout)
+  function prosesLogin() {
       const email = document.getElementById('loginEmail').value;
       const pass = document.getElementById('loginPassword').value;
       const statusLog = document.getElementById('loginStatus');
@@ -140,36 +147,37 @@
           return;
       }
       
-      statusLog.innerHTML = "<div class='status' style='background:#fff3cd; color:#856404;'>Memverifikasi... ⏳</div>";
+      statusLog.innerHTML = "<div class='status' style='background:#fff3cd; color:#856404;'>Memverifikasi ke Server Google... ⏳</div>";
 
-      // Membuat pembatas waktu (timeout) 10 detik
-      let isTimeout = false;
-      const batasanWaktu = setTimeout(() => {
-          isTimeout = true;
-          statusLog.innerHTML = "<div class='status gagal'>Koneksi Internet Lemot / Gagal Menghubungi Firebase. Cek sinyal Anda! 🌐</div>";
-      }, 10000); // 10000 milidetik = 10 detik
-
+      // Meminta verifikasi langsung ke server Google Firebase Auth
       auth.signInWithEmailAndPassword(email, pass)
-      .then(() => {
-          if (!isTimeout) {
-              clearTimeout(batasanWaktu); // Batalkan timeout jika berhasil tepat waktu
-              statusLog.innerHTML = ""; 
-          }
+      .then((userCredential) => {
+          statusLog.innerHTML = "<div class='status sukses'>Login Sukses! Membuka panel...</div>";
       })
       .catch((err) => {
-          if (!isTimeout) {
-              clearTimeout(batasanWaktu); // Batalkan timeout jika Firebase merespons eror
-              statusLog.innerHTML = "<div class='status gagal'>Gagal: " + err.message + "</div>";
+          // Menangkap pesan error asli jika ditolak (misal: password salah atau email tidak terdaftar)
+          console.error("Firebase Auth Error:", err.code, err.message);
+          
+          let pesanError Indonesia = "Gagal masuk: " + err.message;
+          if (err.code === "auth/wrong-password") {
+              pesanErrorIndonesia = "Password yang Anda masukkan salah! ❌";
+          } else if (err.code === "auth/user-not-found") {
+              pesanErrorIndonesia = "Email admin belum terdaftar di Firebase! ❌";
+          } else if (err.code === "auth/invalid-email") {
+              pesanErrorIndonesia = "Format penulisan email salah! ❌";
           }
+          
+          statusLog.innerHTML = "<div class='status gagal'>" + pesanErrorIndonesia + "</div>";
       });
-      }
-
-  // Fungsi Logout
-  function prosesLogout() {
-      if(confirm("Keluar dari panel admin?")) auth.signOut();
   }
 
-  // Fungsi Simpan / Tambah Produk
+  function prosesLogout() {
+      if(confirm("Keluar dari panel admin?")) {
+          auth.signOut();
+      }
+  }
+
+  // 5. Logika Menyimpan Produk ke Database (Firestore)
   function simpanProduk() {
       const nama = document.getElementById('namaProduk').value;
       const harga = parseInt(document.getElementById('hargaProduk').value);
@@ -226,7 +234,6 @@
       }
   }
 
-  // Fungsi Siapkan Form untuk Edit
   function editProduk(id, nama, harga, fotoString, deskripsi, rating, terjual, isCod) {
       editId = id;
       document.getElementById('namaProduk').value = nama;
@@ -245,7 +252,6 @@
 
   function batalEdit() { resetForm(); }
 
-  // Fungsi Reset Form
   function resetForm() {
       editId = null;
       document.getElementById('namaProduk').value = '';
@@ -261,7 +267,6 @@
       document.getElementById('btnBatal').style.display = "none";
   }
 
-  // Fungsi Hapus Produk
   function hapusProduk(id, nama) {
       if (confirm("Hapus produk: " + nama + "?")) {
           db.collection('products').doc(id).delete()
@@ -269,7 +274,7 @@
       }
   }
 
-  // Fungsi Muat Daftar Produk Secara Real-time
+  // 6. Muat Daftar Produk Secara Real-time
   function muatDaftarProduk() {
       const listEl = document.getElementById('productListAdmin');
       db.collection('products').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
@@ -293,7 +298,6 @@
               item.innerHTML = '<img src="' + fUtama + '" class="product-img" onerror="this.src=\'https://placeholder.com\'\"><div class="product-info"><div class="nama">' + p.namaProduk + '</div><div class="harga">Rp' + p.hargaProduk.toLocaleString('id-ID') + '</div><div style="font-size:11px; color:#666;">🌟' + rate + ' | Jual: ' + sold + ' | COD: ' + (cod ? '✅' : '❌') + '</div></div><div class="action-btns"><button class="btn-edit" id="btnEdit-' + pId + '">Edit</button><button class="btn-delete" id="btnDel-' + pId + '">Hapus</button></div>';
               listEl.appendChild(item);
 
-              // Berikan fungsi klik tombol secara aman tanpa risiko crash teks kutip
               document.getElementById('btnEdit-' + pId).onclick = function() {
                   editProduk(pId, p.namaProduk, p.hargaProduk, fStr, p.deskripsi, rate, sold, cod);
               };
