@@ -104,12 +104,13 @@
     <button class="btn btn-buy" onclick="beliSekarang()">Beli Sekarang</button>
 </div>
 
-<!-- Firebase SDK v8 (Menyesuaikan dengan Admin Panel Anda) -->
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
-<!-- Library JS Swiper untuk efek Geser Foto -->
-<script src="https://jsdelivr.net"></script>
+<!-- 1. Library Firebase (Wajib sama versinya dengan index.html) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+<!-- 2. Library Swiper untuk efek geser foto (CSS & JS) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 <script>
   // Konfigurasi Firebase (Sama dengan admin panel Anda)
   const firebaseConfig = {
