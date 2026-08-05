@@ -114,7 +114,7 @@
   // Konfigurasi Firebase (Sama dengan admin panel Anda)
   const firebaseConfig = {
     apiKey: "AIzaSyCuWK3d9Y5P6o6PyG9gidWP77VSNPeWnXI",
-    authDomain: "://firebaseapp.com",
+    authDomain: "alfa-olshop.firebaseapp.com",
     projectId: "alfa-olshop",
     storageBucket: "alfa-olshop.firebasestorage.app",
     messagingSenderId: "1079963214518",
@@ -182,7 +182,7 @@
   function beliSekarang() {
       if (dataProdukGlobal) {
           // Edit nomor WA Anda di bawah ini
-          const nomorWA = "628123456789"; 
+          const nomorWA = "6285765850084"; 
           const pesan = `Halo Alfu Olshop, saya mau beli produk ini:\n\n*Nama Produk:* ${dataProdukGlobal.namaProduk}\n*Harga:* Rp${dataProdukGlobal.hargaProduk.toLocaleString('id-ID')}\n\nMohon info langkah selanjutnya ya!`;
           window.open(`https://wa.me{nomorWA}?text=${encodeURIComponent(pesan)}`, '_blank');
       }
