@@ -151,25 +151,35 @@
               }
 
               // Render Galeri Slider Foto Gambar
-              const imageWrapper = document.getElementById('imageWrapper');
-              // Antisipasi jika linkFoto masih bertipe data string tunggal (produk lama)
-              const fotoArray = Array.isArray(produk.linkFoto) ? produk.linkFoto : [produk.linkFoto];
+const imageWrapper = document.getElementById('imageWrapper');
+// Antisipasi jika linkFoto masih bertipe data string tunggal (produk lama)
+const fotoArray = Array.isArray(produk.linkFoto) ? produk.linkFoto : [produk.linkFoto];
+
+fotoArray.forEach((url) => {
+    if(url) {
+        imageWrapper.innerHTML += `
+            <div class="swiper-slide">
+                <!-- Tambahan div zoom container di bawah ini -->
+                <div class="swiper-zoom-container">
+                    <img src="${url}" onerror="this.src='https://placeholder.com'">
+                </div>
+            </div>
+        `;
+    }
+});
+
+             // Hidupkan Fitur Geser Swiper Slider setelah foto dimuat
+new Swiper(".mySwiper", {
+    pagination: { 
+        el: ".swiper-pagination", 
+        clickable: true 
+    },
+    // 👇 TAMBAHKAN KODE ZOOM INI
+    zoom: {
+        maxRatio: 3, // Foto bisa di-zoom sampai 3x lipat
+    },
+});
               
-              fotoArray.forEach((url) => {
-                  if(url) {
-                      imageWrapper.innerHTML += `
-                          <div class="swiper-slide">
-                              <img src="${url}" onerror="this.src='https://placeholder.com'">
-                          </div>
-                      `;
-                  }
-              });
-
-              // Hidupkan Fitur Geser Swiper Slider setelah foto dimuat
-              new Swiper(".mySwiper", {
-                  pagination: { el: ".swiper-pagination", clickable: true },
-              });
-
           } else {
               document.body.innerHTML = "<h3 style='text-align:center; margin-top:50px;'>Produk tidak ditemukan! 😢</h3>";
           }
