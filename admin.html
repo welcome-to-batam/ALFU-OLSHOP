@@ -97,9 +97,9 @@
 </div>
 
 <!-- HUBUNGKAN LIBRARY FIREBASE -->
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script>
   // 1. Konfigurasi Resmi Sesuai Gambar Firebase Console Anda (ALFA)
   const firebaseConfig = {
@@ -136,7 +136,7 @@
       }
   });
 
-  // 4. Fungsi Login Utama (Menggunakan Respons Asli Firebase Tanpa Timeout)
+    // 4. Fungsi Login Utama (Menggunakan Respons Asli Firebase Tanpa Timeout)
   function prosesLogin() {
       const email = document.getElementById('loginEmail').value;
       const pass = document.getElementById('loginPassword').value;
@@ -155,11 +155,13 @@
           statusLog.innerHTML = "<div class='status sukses'>Login Sukses! Membuka panel...</div>";
       })
       .catch((err) => {
-          // Menangkap pesan error asli jika ditolak (misal: password salah atau email tidak terdaftar)
+          // Menangkap pesan error asli jika ditolak
           console.error("Firebase Auth Error:", err.code, err.message);
           
-          let pesanError Indonesia = "Gagal masuk: " + err.message;
-          if (err.code === "auth/wrong-password") {
+          // PERBAIKAN ADA DI BARIS INI (Hapus spasi pada nama variabel)
+          let pesanErrorIndonesia = "Gagal masuk: " + err.message;
+          
+          if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
               pesanErrorIndonesia = "Password yang Anda masukkan salah! ❌";
           } else if (err.code === "auth/user-not-found") {
               pesanErrorIndonesia = "Email admin belum terdaftar di Firebase! ❌";
