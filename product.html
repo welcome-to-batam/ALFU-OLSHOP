@@ -50,6 +50,21 @@
 </head>
 <body>
 
+    <!-- Pop-up Zoom Full Screen -->
+<div id="fullscreenZoom" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; flex-direction:column; justify-content:center; align-items:center;">
+    
+    <!-- Tombol Tutup (X) -->
+    <div style="position:absolute; top:15px; right:15px; color:white; font-size:30px; cursor:pointer; z-index:999;" onclick="tutupZoom()">✕</div>
+    
+    <!-- Wadah Foto Swiper Full Screen -->
+    <div class="swiper fs-swiper" style="width:100%; height:100%;">
+        <div class="swiper-wrapper" id="fullscreenWrapper">
+            <!-- Foto akan dimasukkan lewat JS -->
+        </div>
+        <div class="swiper-pagination" style="bottom: 20px;"></div>
+    </div>
+</div>
+
 <div class="container">
     <!-- Tempat Slider Foto Gambar -->
     <div class="swiper mySwiper">
@@ -152,32 +167,31 @@
 
               // Render Galeri Slider Foto Gambar
 const imageWrapper = document.getElementById('imageWrapper');
-// Antisipasi jika linkFoto masih bertipe data string tunggal (produk lama)
 const fotoArray = Array.isArray(produk.linkFoto) ? produk.linkFoto : [produk.linkFoto];
 
-fotoArray.forEach((url) => {
+// Kosongkan dulu wadah popup full screen
+document.getElementById('fullscreenWrapper').innerHTML = '';
+
+fotoArray.forEach((url, index) => {
     if(url) {
+        // 1. Foto untuk kotak detail produk (bisa diklik)
         imageWrapper.innerHTML += `
             <div class="swiper-slide">
-                <!-- Tambahan div zoom container di bawah ini -->
                 <div class="swiper-zoom-container">
-                    <img src="${url}" onerror="this.src='https://placeholder.com'">
+                    <img src="${url}" style="cursor:zoom-in;" onclick="bukaZoom(${index})" onerror="this.src='https://placeholder.com'">
+                </div>
+            </div>
+        `;
+        
+        // 2. Foto untuk popup full screen
+        document.getElementById('fullscreenWrapper').innerHTML += `
+            <div class="swiper-slide">
+                <div class="swiper-zoom-container">
+                    <img src="${url}" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://placeholder.com'">
                 </div>
             </div>
         `;
     }
-});
-
-             // Hidupkan Fitur Geser Swiper Slider setelah foto dimuat
-new Swiper(".mySwiper", {
-    pagination: { 
-        el: ".swiper-pagination", 
-        clickable: true 
-    },
-    // 👇 TAMBAHKAN KODE ZOOM INI
-    zoom: {
-        maxRatio: 3, // Foto bisa di-zoom sampai 3x lipat
-    },
 });
               
           } else {
@@ -198,6 +212,32 @@ new Swiper(".mySwiper", {
           window.open(`https://wa.me{6285765850084}?text=${encodeURIComponent(pesan)}`, '_blank');
       }
   }
+
+    let fsSwiper = null; // Variabel untuk menyimpan swiper full screen
+
+function bukaZoom(indexMulai) {
+    const modal = document.getElementById('fullscreenZoom');
+    modal.style.display = 'flex'; // Tampilkan layar hitam full screen
+    
+    // Inisialisasi Swiper untuk popup full screen
+    if (!fsSwiper) {
+        fsSwiper = new Swiper('.fs-swiper', {
+            zoom: {
+                maxRatio: 4, // Bisa di-zoom sampai 4x di layar penuh
+            },
+            pagination: {
+                el: '.fs-swiper .swiper-pagination',
+            },
+        });
+    }
+    
+    // Langsung lompat ke foto yang diklik pengguna
+    fsSwiper.slideTo(indexMulai, 0);
+}
+
+function tutupZoom() {
+    document.getElementById('fullscreenZoom').style.display = 'none'; // Sembunyikan lagi
+}
 </script>
 </body>
 </html>
